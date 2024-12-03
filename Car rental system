@@ -1,0 +1,202 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+
+class CarRentalSystem extends Frame implements ActionListener {
+    // Components for the GUI
+    Label lblTitle, lblCarList, lblSearch, lblBookingInfo, lblCustomerName, lblPaymentMode, lblDaysRent, lblPriceInfo, lblDateRent;
+    TextField txtSearch, txtCustomerName, txtDaysRent, txtDateRent;
+    TextArea txtBookingDetails;
+    Button btnSearch, btnBook, btnShowAll;
+    Choice paymentModeChoice;
+    List carList;
+
+    // Sample data
+    HashMap<String, Integer> cars = new HashMap<>();
+    HashMap<String, Integer> bookedCars = new HashMap<>();
+
+    public CarRentalSystem() {
+        setTitle("Car Rental System");
+        setSize(700, 750);
+        setLayout(null);
+        setVisible(true);
+
+        // Title
+        lblTitle = new Label("Car Rental System");
+        lblTitle.setBounds(250, 30, 200, 30);
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
+        add(lblTitle);
+
+        // Search Section
+        lblSearch = new Label("Search Car:");
+        lblSearch.setBounds(50, 80, 100, 30);
+        add(lblSearch);
+
+        txtSearch = new TextField();
+        txtSearch.setBounds(150, 80, 200, 30);
+        add(txtSearch);
+
+        btnSearch = new Button("Search");
+        btnSearch.setBounds(370, 80, 80, 30);
+        btnSearch.addActionListener(this);
+        add(btnSearch);
+
+        btnShowAll = new Button("Show All Cars");
+        btnShowAll.setBounds(470, 80, 100, 30);
+        btnShowAll.addActionListener(this);
+        add(btnShowAll);
+
+        // Car List Section
+        lblCarList = new Label("Available Cars (Price per Day):");
+        lblCarList.setBounds(50, 130, 200, 30);
+        add(lblCarList);
+
+        carList = new List();
+        carList.setBounds(50, 160, 600, 150);
+        add(carList);
+
+        // Booking Section
+        lblBookingInfo = new Label("Booking Information:");
+        lblBookingInfo.setBounds(50, 330, 150, 30);
+        add(lblBookingInfo);
+
+        lblCustomerName = new Label("Customer Name:");
+        lblCustomerName.setBounds(50, 370, 120, 30);
+        add(lblCustomerName);
+
+        txtCustomerName = new TextField();
+        txtCustomerName.setBounds(180, 370, 200, 30);
+        add(txtCustomerName);
+
+        lblDaysRent = new Label("Number of Days:");
+        lblDaysRent.setBounds(50, 410, 120, 30);
+        add(lblDaysRent);
+
+        txtDaysRent = new TextField();
+        txtDaysRent.setBounds(180, 410, 200, 30);
+        add(txtDaysRent);
+
+        lblDateRent = new Label("Date of Rent (dd-MM-yyyy):");
+        lblDateRent.setBounds(50, 450, 180, 30);
+        add(lblDateRent);
+
+        txtDateRent = new TextField();
+        txtDateRent.setBounds(230, 450, 150, 30);
+        add(txtDateRent);
+
+        lblPaymentMode = new Label("Payment Mode:");
+        lblPaymentMode.setBounds(50, 490, 120, 30);
+        add(lblPaymentMode);
+
+        paymentModeChoice = new Choice();
+        paymentModeChoice.setBounds(180, 490, 200, 30);
+        paymentModeChoice.add("Credit Card");
+        paymentModeChoice.add("Debit Card");
+        paymentModeChoice.add("Cash");
+        paymentModeChoice.add("UPI");
+        add(paymentModeChoice);
+
+        btnBook = new Button("Book");
+        btnBook.setBounds(400, 490, 80, 30);
+        btnBook.addActionListener(this);
+        add(btnBook);
+
+        txtBookingDetails = new TextArea();
+        txtBookingDetails.setBounds(50, 540, 600, 150);
+        add(txtBookingDetails);
+
+        // Add sample cars
+        initializeCars();
+
+        // Window close event
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                dispose();
+            }
+        });
+    }
+
+    public void initializeCars() {
+        cars.put("Toyota Corolla - $50/day", 50);
+        cars.put("Honda Civic - $45/day", 45);
+        cars.put("Ford Mustang - $100/day", 100);
+        cars.put("Tesla Model 3 - $120/day", 120);
+        cars.put("BMW X5 - $150/day", 150);
+        cars.put("Mercedes Benz C-Class - $140/day", 140);
+        cars.put("Audi A6 - $130/day", 130);
+        cars.put("Chevrolet Camaro - $90/day", 90);
+
+        updateCarList();
+    }
+
+    public void updateCarList() {
+        carList.removeAll();
+        for (String car : cars.keySet()) {
+            carList.add(car);
+        }
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == btnSearch) {
+            String searchQuery = txtSearch.getText().toLowerCase();
+            carList.removeAll();
+            for (String car : cars.keySet()) {
+                if (car.toLowerCase().contains(searchQuery)) {
+                    carList.add(car);
+                }
+            }
+        } else if (e.getSource() == btnShowAll) {
+            updateCarList();
+        } else if (e.getSource() == btnBook) {
+            String selectedCar = carList.getSelectedItem();
+            String customerName = txtCustomerName.getText();
+            String paymentMode = paymentModeChoice.getSelectedItem();
+            String daysText = txtDaysRent.getText();
+            String rentDateText = txtDateRent.getText();
+
+            if (selectedCar != null && !customerName.isEmpty() && !daysText.isEmpty() && !rentDateText.isEmpty()) {
+                try {
+                    int days = Integer.parseInt(daysText);
+                    if (days <= 0) {
+                        txtBookingDetails.setText("Number of days must be greater than zero.");
+                        return;
+                    }
+
+                    // Validate date format
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                    sdf.setLenient(false);
+                    Date rentDate = sdf.parse(rentDateText);
+
+                    int pricePerDay = cars.get(selectedCar);
+                    int totalCost = pricePerDay * days;
+
+                    cars.remove(selectedCar);
+                    bookedCars.put(selectedCar, totalCost);
+
+                    txtBookingDetails.setText(
+                        "Booking Successful!\n" +
+                        "Car: " + selectedCar.split(" - ")[0] + "\n" +
+                        "Customer: " + customerName + "\n" +
+                        "Days Rented: " + days + "\n" +
+                        "Date of Rent: " + rentDateText + "\n" +
+                        "Payment Mode: " + paymentMode + "\n" +
+                        "Total Cost: $" + totalCost
+                    );
+                    updateCarList();
+                } catch (NumberFormatException ex) {
+                    txtBookingDetails.setText("Please enter a valid number for days.");
+                } catch (Exception ex) {
+                    txtBookingDetails.setText("Invalid date format. Please use dd-MM-yyyy.");
+                }
+            } else {
+                txtBookingDetails.setText("Please fill all fields and select a car.");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new CarRentalSystem();
+    }
+}
